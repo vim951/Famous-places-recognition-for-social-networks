@@ -12,7 +12,8 @@ import pandas as pd
 
 csv_db_path = 'train_clean.csv'
 csv_labels_path = 'train_label_to_category.csv'
-preprocessed_db_path='MALIS-PDB'
+preprocessed_db_path = 'data'
+preprocessed_db_path = 'PDB'
 
 size=100
 

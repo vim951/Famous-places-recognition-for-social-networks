@@ -12,6 +12,8 @@ import database
 
 ## Constants
 
+VERBOSE,DEBUG=False,False
+
 #Those two values can be changed
 n=50
 size=100
