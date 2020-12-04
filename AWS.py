@@ -12,10 +12,14 @@ import database
 
 ## Constants
 
-#Those two values can be changed
+VERBOSE,DEBUG=False,False
+
+#Those five values can be changed
 n=50
 size=100
 global_file_per_new_tar=10**4
+untar_dir='tmp1'
+npy_dir='tmp2'
 
 #Those two values should only be changed in case of errors
 global_counter=0
@@ -100,7 +104,7 @@ def extract_image(tar, tarinfo):
     if global_counter==global_file_per_new_tar:
         compress_send_wipe()
 
-def read_tar(path):
+def read_tar(path, must_delete):
     if VERBOSE:
         print("Reading " + str(path))
     tar = tarfile.open(path)
@@ -113,7 +117,7 @@ def read_tar(path):
     tar.close()
     if DEBUG:
         sys.exit(1)
-    else:
+    elif must_delete:
         os.remove(path)
 
 ## Init
@@ -135,7 +139,7 @@ def process_s3():
         k = "0"*(3-len(k))+k
         print('Treating images_' + k + '.tar')
         downloadTar('images_' + k + '.tar')
-        read_tar('tmp.tar')
+        read_tar('tmp.tar', True)
     compress_send_wipe()
 
 def process_local():
@@ -144,7 +148,7 @@ def process_local():
         k = str(i)
         k = "0"*(3-len(k))+k
         print('Treating images_' + k + '.tar')
-        read_tar('data/images_' + k + '.tar')
+        read_tar('data/images_' + k + '.tar', False)
     compress_send_wipe()
 
 if __name__ == "__main__":

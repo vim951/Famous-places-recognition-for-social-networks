@@ -10,9 +10,16 @@ import pandas as pd
 
 ## Constants
 
+<<<<<<< HEAD
 csv_db_path = '/Users/hugodanet/Downloads/train_clean.csv'
 csv_labels_path = '/Users/hugodanet/Downloads/train_label_to_category.csv'
 preprocessed_db_path = '/Users/hugodanet/Downloads/DOWNLOAD DATASET/ENTRY_DATA'
+=======
+csv_db_path = 'train_clean.csv'
+csv_labels_path = 'train_label_to_category.csv'
+preprocessed_db_path = 'data'
+preprocessed_db_path = 'PDB'
+>>>>>>> aed8b5003e5d3d84d846d57dfcbd0339ca1f6d1c
 
 size=100
 
