@@ -9,12 +9,13 @@ from keras.models import Sequential
 
 import tensorflow as tf
 import datetime
+import os
 
 csv_db_path = '/Users/hugodanet/Downloads/train_clean.csv'
 csv_labels_path = '/Users/hugodanet/Downloads/train_label_to_category.csv'
 preprocessed_db_path = '/Users/hugodanet/Downloads/DOWNLOAD DATASET/ENTRY_DATA'
 
-train_size = 6133
+train_size = 36966
 size = 100
 
 ##
