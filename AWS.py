@@ -8,6 +8,8 @@ import sys
 import os
 import shutil
 
+import database
+
 ## Constants
 
 #Those two values can be changed
@@ -73,7 +75,7 @@ def compress_send_wipe():
         print("compress_send_wipe() was called.")
     global global_counter
     global_counter=0
-    preprocess_database()
+    database.preprocess_database()
     path=get_tar_name()
     dir_to_tar(npy_dir, path)
     send_database(path)
@@ -115,7 +117,7 @@ def init():
     global C,L,ids,s3
     s3 = boto3.resource('s3')
     print("Initialising")
-    C,_=load_db_csv(n)
+    C,_=database.load_db_csv(n)
     ids=[x for c in C for x in c[1].split(' ')]
 
 def lets_go():
