@@ -14,11 +14,12 @@ import database
 
 VERBOSE,DEBUG=False,False
 
-#Those two values can be changed
+#Those five values can be changed
 n=50
 size=100
 global_file_per_new_tar=10**4
 untar_dir='tmp1'
+npy_dir='tmp2'
 
 #Those two values should only be changed in case of errors
 global_counter=0
