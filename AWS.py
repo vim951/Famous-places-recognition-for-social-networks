@@ -2,13 +2,19 @@
 
 import boto3
 import botocore
+
 import tarfile
 
 import sys
 import os
+from os import listdir
+from os.path import isfile, isdir, join
 import shutil
 
 from multiprocessing import Process
+
+import time
+from datetime import datetime
 
 import database
 
@@ -27,10 +33,9 @@ start_at=0
 #Those two values should only be changed in case of errors
 global_counter=0
 global_new_tar_counter=0
+display=True
 
 ## AWS specific
-
-
 
 def downloadTar(filename):
     try:
@@ -114,6 +119,16 @@ def read_tar(path, must_delete):
         os.remove(path)
     print("End of process for " + path)
 
+def progress_visualizer():
+    def count_files(path):
+        c=len([f for f in listdir(path) if isfile(join(path, f))])
+        for d in [f for f in listdir(path) if isdir(join(path, f))]:
+            c+=count_files(join(path, d))
+        return c
+    while display:
+        print(datetime.now().strftime("%H:%M:%S") + " - " + str(count_files(untar_dir)) + " files are in " + untar_dir)
+        time.sleep(20)
+
 ## Init
 
 def init():
@@ -126,6 +141,17 @@ def init():
     C,_=database.load_db_csv(n)
     ids=[x for c in C for x in c[1].split(' ')]
 
+def handle_processes(P):
+    for p in P:
+        p.start()
+    progress_visualizer_process=Process(target=progress_visualizer)
+    progress_visualizer_process.start()
+    for p in P:
+        p.join()
+    progress_visualizer_process.terminate()
+    display=False
+    compress_send_wipe()
+
 def process_s3():
     init()
     P=[]
@@ -135,9 +161,7 @@ def process_s3():
         print('Donwloading images_' + k + '.tar and creating process')
         downloadTar('images_' + k + '.tar')
         P.append(Process(target=read_tar, args=['tmp.tar', True]))
-    for p in P:
-        p.start()
-    compress_send_wipe()
+    handle_processes(P)
 
 def process_local():
     init()
@@ -147,9 +171,7 @@ def process_local():
         k = "0"*(3-len(k))+k
         print('Creating process for images_' + k + '.tar')
         P.append(Process(target=read_tar, args=['data/images_' + k + '.tar', False]))
-    for p in P:
-        p.start()
-    compress_send_wipe()
+    handle_processes(P)
 
 if __name__ == "__main__":
     if sys.argv[1]=="local":
