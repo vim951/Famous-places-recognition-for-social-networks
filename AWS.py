@@ -178,5 +178,7 @@ if __name__ == "__main__":
         process_local()
     elif sys.argv[1]=="s3":
         process_s3()
+    elif sys.argv[1]=="purge":
+        compress_send_wipe()
     else:
         print("Invalid syntax")
