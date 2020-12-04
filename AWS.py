@@ -90,7 +90,7 @@ def dir_to_tar(path, tar_name):
 def compress_send_wipe():
     global global_counter
     global_counter=0
-    database.preprocess_database('tmp1')
+    database.preprocess_database(untar_dir, npy_dir)
     path=get_tar_name()
     dir_to_tar(npy_dir, path)
     send_database(path)
