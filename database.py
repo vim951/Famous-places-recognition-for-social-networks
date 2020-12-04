@@ -8,6 +8,8 @@ from PIL import Image
 import numpy as np
 import pandas as pd
 
+from multiprocessing import Process
+
 import random
 
 ## Constants
@@ -63,7 +65,7 @@ def preprocess_image(image_path, size, bin_path):
 def preprocess_database(from_path=None, to_path=None):
     
     from_path = db_path if from_path==None else from_path
-    to_path = preprocessed_db_path #if to_path==None else to_path
+    to_path = preprocessed_db_path if to_path==None else to_path
     print("Preprocessing " + from_path)
     
     to_dir = Path(to_path)
@@ -71,7 +73,7 @@ def preprocess_database(from_path=None, to_path=None):
         to_dir.mkdir()
     
     for f in [f for f in listdir(from_path) if (isfile(join(from_path, f)) and not ".DS_Store" in f)]:
-        preprocess_image(join(from_path, f), size, join(to_path, f).replace(".jpg", ".npy"))
+        Process(target=preprocess_image, args=[join(from_path, f), size, join(to_path, f).replace(".jpg", ".npy")]).start()
     
     for d in [f for f in listdir(from_path) if not isfile(join(from_path, f))]:
         preprocess_database(join(from_path, d), join(to_path, d))
