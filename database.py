@@ -8,6 +8,8 @@ from PIL import Image
 import numpy as np
 import pandas as pd
 
+import random
+
 ## Constants
 
 csv_db_path = 'train_clean.csv'
@@ -73,3 +75,10 @@ def preprocess_database(from_path=None, to_path=None):
     
     for d in [f for f in listdir(from_path) if not isfile(join(from_path, f))]:
         preprocess_database(join(from_path, d), join(to_path, d))
+
+## NN aux functions
+
+def joined_suffle(X,Y):
+    Z=list(zip(X,Y))
+    random.shuffle(Z)
+    return list(zip(*Z))
