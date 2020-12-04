@@ -97,8 +97,8 @@ def extract_image(tar, tarinfo):
     global global_counter
     tar.extract(tarinfo, untar_dir)
     global_counter += 1
-    if global_counter==global_file_per_new_tar:
-        compress_send_wipe()
+    # if global_counter==global_file_per_new_tar:
+    #     compress_send_wipe()
 
 def read_tar(path, must_delete):
     print("Process started for " + path)
