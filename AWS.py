@@ -120,7 +120,7 @@ def init():
     C,_=database.load_db_csv(n)
     ids=[x for c in C for x in c[1].split(' ')]
 
-def lets_go():
+def process_s3():
     init()
     for i in range(500):
         k = str(i)
@@ -130,5 +130,19 @@ def lets_go():
         read_tar('tmp.tar')
     compress_send_wipe()
 
+def process_local():
+    init()
+    for i in range(500):
+        k = str(i)
+        k = "0"*(3-len(k))+k
+        print('Treating images_' + k + '.tar')
+        read_tar('data/images_' + k + '.tar')
+    compress_send_wipe()
+
 if __name__ == "__main__":
-    lets_go()
+    if sys.argv[1]=="local":
+        process_local()
+    elif sys.argv[1]=="s3":
+        process_s3()
+    else:
+        print("Invalid syntax")
