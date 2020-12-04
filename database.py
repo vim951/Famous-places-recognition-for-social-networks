@@ -67,6 +67,8 @@ def preprocess_database(from_path=None, to_path=None):
     from_path = db_path if from_path==None else from_path
     to_path = preprocessed_db_path if to_path==None else to_path
     
+    print("Preprocessing " + from_path)
+    
     to_dir = Path(to_path)
     if not to_dir.exists():
         to_dir.mkdir()
