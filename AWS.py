@@ -112,6 +112,7 @@ def read_tar(path, must_delete):
     tar.close()
     if must_delete:
         os.remove(path)
+    print("End of process for " + path)
 
 ## Init
 
