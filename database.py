@@ -78,7 +78,7 @@ def preprocess_database(from_path=None, to_path=None):
 
 ## NN aux functions
 
-def joined_suffle(X,Y):
+def joined_shuffle(X,Y):
     Z=list(zip(X,Y))
     random.shuffle(Z)
     return list(zip(*Z))
