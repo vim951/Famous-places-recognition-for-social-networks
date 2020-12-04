@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from database import load_db_csv , id_to_np
+from database import load_db_csv , id_to_np, joined_shuffle
 
 import keras
 from keras.models import Sequential
@@ -48,13 +48,12 @@ for i in range(5):
             X.append(id_to_np(x))
             Y.append([i])
         
+X,Y = joined_shuffle(X, Y)
 #X=[id_to_np(x) for x in X]
 #Y=[np.array([1 if i==y else 0 for i in range(5)]) for y in Y]
 
 Xarr = np.array(X)
 Yarr = np.array(Y)
-
-print(Yarr)
 
 ##VISUALIZATION
 
