@@ -104,7 +104,7 @@ def extract_image(tar, tarinfo):
     if global_counter==global_file_per_new_tar:
         compress_send_wipe()
 
-def read_tar(path):
+def read_tar(path, must_delete):
     if VERBOSE:
         print("Reading " + str(path))
     tar = tarfile.open(path)
