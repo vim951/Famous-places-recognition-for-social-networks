@@ -140,7 +140,7 @@ def process_s3():
         print('Treating images_' + k + '.tar')
         downloadTar('images_' + k + '.tar')
         read_tar('tmp.tar', True)
-    compress_send_wipe(True)
+    compress_send_wipe()
 
 def process_local():
     init()
@@ -149,7 +149,7 @@ def process_local():
         k = "0"*(3-len(k))+k
         print('Treating images_' + k + '.tar')
         read_tar('data/images_' + k + '.tar', False)
-    compress_send_wipe(False)
+    compress_send_wipe()
 
 if __name__ == "__main__":
     if sys.argv[1]=="local":
