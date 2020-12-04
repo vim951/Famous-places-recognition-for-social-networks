@@ -72,10 +72,15 @@ def preprocess_database(from_path=None, to_path=None):
         to_dir.mkdir()
     
     for f in [f for f in listdir(from_path) if (isfile(join(from_path, f)) and not ".DS_Store" in f)]:
-        Process(target=preprocess_image, args=[join(from_path, f), size, join(to_path, f).replace(".jpg", ".npy")]).start()
+        preprocess_image(join(from_path, f), size, join(to_path, f).replace(".jpg", ".npy"))
     
+    P=[]
     for d in [f for f in listdir(from_path) if not isfile(join(from_path, f))]:
-        preprocess_database(join(from_path, d), join(to_path, d))
+        P.append(Process(target=preprocess_database, args=[join(from_path, d), join(to_path, d)])
+    for p in P:
+        p.start()
+    for p in P:
+        p.join()
 
 ## NN aux functions
 

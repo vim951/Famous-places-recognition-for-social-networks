@@ -153,7 +153,6 @@ def handle_processes(P):
     compress_send_wipe()
 
 def process_s3():
-    init()
     P=[]
     for i in range(500):
         k = str(i)
@@ -164,7 +163,6 @@ def process_s3():
     handle_processes(P)
 
 def process_local():
-    init()
     P=[]
     for i in range(start_at, 500):
         k = str(i)
@@ -174,6 +172,7 @@ def process_local():
     handle_processes(P)
 
 if __name__ == "__main__":
+    init()
     if sys.argv[1]=="local":
         process_local()
     elif sys.argv[1]=="s3":
