@@ -76,7 +76,7 @@ def preprocess_database(from_path=None, to_path=None):
     
     P=[]
     for d in [f for f in listdir(from_path) if not isfile(join(from_path, f))]:
-        P.append(Process(target=preprocess_database, args=[join(from_path, d), join(to_path, d)])
+        P.append(Process(target=preprocess_database, args=[join(from_path, d), join(to_path, d)]))
     for p in P:
         p.start()
     for p in P:
