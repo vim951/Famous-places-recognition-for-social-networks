@@ -79,7 +79,7 @@ def dir_to_tar(path, tar_name):
             for file in files:
                 tar_handle.add(os.path.join(root, file))
 
-def compress_send_wipe():
+def compress_send_wipe(must_delete):
     if VERBOSE:
         print("compress_send_wipe() was called.")
     global global_counter
@@ -91,7 +91,8 @@ def compress_send_wipe():
     if DEBUG:
         sys.exit(2)
     else:
-        os.remove(path)
+        if must_delete:
+            os.remove(path)
         shutil.rmtree(npy_dir)
         shutil.rmtree(untar_dir)
 
@@ -140,7 +141,7 @@ def process_s3():
         print('Treating images_' + k + '.tar')
         downloadTar('images_' + k + '.tar')
         read_tar('tmp.tar')
-    compress_send_wipe()
+    compress_send_wipe(True)
 
 def process_local():
     init()
@@ -149,7 +150,7 @@ def process_local():
         k = "0"*(3-len(k))+k
         print('Treating images_' + k + '.tar')
         read_tar('data/images_' + k + '.tar')
-    compress_send_wipe()
+    compress_send_wipe(False)
 
 if __name__ == "__main__":
     if sys.argv[1]=="local":
