@@ -23,6 +23,8 @@ global_new_tar_counter=0
 
 ## AWS specific
 
+
+
 def downloadTar(filename):
     try:
         s3.Bucket('google-landmark').download_file('train/'+filename, 'tmp.tar')
@@ -36,8 +38,11 @@ def downloadTar(filename):
 def uploadNPY(filename):
     print('\033[96m------------------ UPLOAD ' + filename + ' -------------------\033[0m')
 
-    s3_client = boto3.client('s3')
-    bucket_size=sum([object.size for object in boto3.resource('s3').Bucket('cassettefbisurveillancevan').objects.all()])
+    s3_client = boto3.client('s3',
+    	aws_access_key_id=os.environ.get('AWS_ACCESS_KEY'),
+    	aws_secret_access_key=os.environ.get('AWS_SECRET_KEY')
+    	)
+    bucket_size=sum([object.size for object in s3.Bucket('cassettefbisurveillancevan').objects.all()])
     print(bucket_size)
     if(bucket_size>3.5e9):
         print('\033[96m------------------ BUCKET IS FULL -------------------\033[0m')
@@ -115,7 +120,10 @@ def read_tar(path):
 
 def init():
     global C,L,ids,s3
-    s3 = boto3.resource('s3')
+    s3 = boto3.resource('s3',
+    	aws_access_key_id=os.environ.get('AWS_ACCESS_KEY'),
+    	aws_secret_access_key=os.environ.get('AWS_SECRET_KEY')
+    )
     print("Initialising")
     C,_=database.load_db_csv(n)
     ids=[x for c in C for x in c[1].split(' ')]
