@@ -5,6 +5,8 @@ import numpy as np
 from sklearn.utils import class_weight
 from sklearn.metrics import confusion_matrix
 
+import matplotlib.pyplot as plt
+
 from database import load_db_csv , id_to_np, joined_shuffle
 
 import keras
