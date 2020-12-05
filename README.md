@@ -25,3 +25,8 @@ Scikit learning
 10% of the training set used to validate the model
 
 ## Visualization
+
+## Sources
+
+* https://towardsdatascience.com/the-4-convolutional-neural-network-models-that-can-classify-your-fashion-images-9fe7f3e5399d
+* https://towardsdatascience.com/simplified-math-behind-dropout-in-deep-learning-6d50f3f47275
