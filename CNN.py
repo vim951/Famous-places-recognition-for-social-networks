@@ -2,6 +2,8 @@
 
 import numpy as np
 
+from sklearn.utils import class_weight
+
 from database import load_db_csv , id_to_np, joined_shuffle
 
 import keras
@@ -9,6 +11,7 @@ from keras.models import Sequential
 
 import tensorflow as tf
 import datetime
+import os
 
 csv_db_path = '/Users/hugodanet/Downloads/train_clean.csv'
 csv_labels_path = '/Users/hugodanet/Downloads/train_label_to_category.csv'
@@ -17,7 +20,31 @@ preprocessed_db_path = '/Users/hugodanet/Downloads/DOWNLOAD DATASET/ENTRY_DATA'
 train_size = 6133
 size = 100
 
-##
+##DATA PREPARATION
+
+C,L = load_db_csv(5)
+X,Y,W=[],[],[]
+
+for i in range(5):
+    for x in C[i][1].split(' '):
+        if not id_to_np(x) is None:
+            X.append(id_to_np(x))
+            Y.append([i])
+            W.append(i)
+        
+X,Y = joined_shuffle(X, Y)
+
+class_weights = class_weight.compute_class_weight('balanced',np.unique(W),W)
+
+class_weight_dict = dict(enumerate(class_weights))
+
+#X=[id_to_np(x) for x in X]
+#Y=[np.array([1 if i==y else 0 for i in range(5)]) for y in Y]
+
+Xarr = np.array(X)
+Yarr = np.array(Y)
+
+##SET UP NEURAL NETWORK
 
 model = Sequential([
     keras.layers.Conv2D(16, 3, padding='same', activation='relu', input_shape=(100,100,1)),
@@ -36,24 +63,6 @@ model.compile(optimizer='adam',
               metrics=['sparse_categorical_accuracy'])
 
 model.summary()
-
-##
-
-C,L = load_db_csv(5)
-X,Y=[],[]
-
-for i in range(5):
-    for x in C[i][1].split(' '):
-        if not id_to_np(x) is None:
-            X.append(id_to_np(x))
-            Y.append([i])
-        
-X,Y = joined_shuffle(X, Y)
-#X=[id_to_np(x) for x in X]
-#Y=[np.array([1 if i==y else 0 for i in range(5)]) for y in Y]
-
-Xarr = np.array(X)
-Yarr = np.array(Y)
 
 ##VISUALIZATION
 
@@ -80,4 +89,6 @@ history = model.fit(
     max_queue_size=10,
     workers=2,
     use_multiprocessing=True,
+    #class_weight=class_weight_dict
 )
+

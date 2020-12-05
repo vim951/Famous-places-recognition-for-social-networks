@@ -90,7 +90,7 @@ def dir_to_tar(path, tar_name):
 def compress_send_wipe():
     global global_counter
     global_counter=0
-    database.preprocess_database()
+    database.preprocess_database(untar_dir, npy_dir)
     path=get_tar_name()
     dir_to_tar(npy_dir, path)
     send_database(path)
@@ -153,7 +153,6 @@ def handle_processes(P):
     compress_send_wipe()
 
 def process_s3():
-    init()
     P=[]
     for i in range(500):
         k = str(i)
@@ -164,7 +163,6 @@ def process_s3():
     handle_processes(P)
 
 def process_local():
-    init()
     P=[]
     for i in range(start_at, 500):
         k = str(i)
@@ -174,9 +172,12 @@ def process_local():
     handle_processes(P)
 
 if __name__ == "__main__":
+    init()
     if sys.argv[1]=="local":
         process_local()
     elif sys.argv[1]=="s3":
         process_s3()
+    elif sys.argv[1]=="purge":
+        compress_send_wipe()
     else:
         print("Invalid syntax")
