@@ -8,7 +8,7 @@ from database import load_db_csv , id_to_np, joined_shuffle
 
 import keras
 from keras.models import Sequential
-from keras.layers import Conv2D, MaxPooling2D, Dense, Dropout, Flatten
+from keras.layers import Conv2D, MaxPooling2D, Dense, Dropout, Flatten, BatchNormalization
 
 import tensorflow as tf
 
@@ -62,30 +62,44 @@ def getTrainingData():
 def getCNN():
     print("Generating model")
     model = Sequential([
-        Conv2D(16, 3, padding='same', activation='relu', input_shape=(100,100,1)),
+    
+        Conv2D(32, 3, padding='same', activation='relu', input_shape=(100,100,1)),
+        BatchNormalization(),
         MaxPooling2D(),
-        Dropout(0.2),
-        Conv2D(32, 3, padding='same', activation='relu'),
-        MaxPooling2D(),
-        Dropout(0.2),
+        Dropout(0.3),
+        
         Conv2D(64, 3, padding='same', activation='relu'),
+        BatchNormalization(),
         MaxPooling2D(),
-        Dropout(0.2),
+        Dropout(0.3),
+        
+        Conv2D(128, 3, padding='same', activation='relu'),
+        BatchNormalization(),
+        MaxPooling2D(),
+        Dropout(0.3),
+        
         Flatten(),
+        
+        Dense(256, activation='relu'),
+        BatchNormalization(),
+        Dropout(0.3),
+        
         Dense(128, activation='relu'),
-        Dropout(0.2),
-        Dense(categories)
+        BatchNormalization(),
+        Dropout(0.3),
+        
+        Dense(categories, activation='softmax')
     ])
     model.compile(optimizer='adam',
-                loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                loss=keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                 metrics=['sparse_categorical_accuracy'])
     return model
 
-##VISUALIZATION
+## Visualization
 
 #tensorboard --logdir logs/fit
 
-##TRAINING
+## Training
 
 def train(model, X, Y, W):
     print("Training model")
@@ -108,7 +122,7 @@ def train(model, X, Y, W):
     )
     return history
 
-##
+## Main
 
 if __name__ == "__main__":
     tensorboard_init()
