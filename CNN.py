@@ -25,6 +25,7 @@ csv_db_path = 'train_clean.csv'
 csv_labels_path = 'train_label_to_category.csv'
 preprocessed_db_path = 'PDB'
 
+CONFUSION_PERIOD=5
 epochs=100
 train_size = 36966
 size = 100
@@ -33,33 +34,40 @@ categories=50
 ## Init
 
 def tensorboard_init():
+    global file_writer_cm
     print("Initializing directory")
     try:
         shutil.rmtree("logs")
     except:
         pass
-    
-classes_list = []
-for i in range(number_of_classes):
-    classes_list.append(i)
+    log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+    file_writer_cm = tf.summary.create_file_writer(log_dir + '/cm')
+    cm_callback = keras.callbacks.LambdaCallback(on_epoch_end=log_confusion_matrix)
+    return tensorboard_callback, cm_callback
 
 ## Data preparation
 
- print("Generating training data")
- C,L = load_db_csv(categories)
- X,Y,W=[],[],[]
+def getTrainingData():
+    print("Generating training data")
+    global X,Y,L
     
- for i in range(categories):
-     for x in C[i][1].split(' '):
-         if not id_to_np(x) is None:
-             X.append(id_to_np(x))
-             Y.append([i])
-             W.append(i)
+    C,L = load_db_csv(categories)
+    X,Y,W=[],[],[]
+    
+    for i in range(categories):
+        for x in C[i][1].split(' '):
+            if not id_to_np(x) is None:
+                X.append(id_to_np(x))
+                Y.append([i])
+                W.append(i)
             
- X,Y = joined_shuffle(X, Y)
+    X,Y = joined_shuffle(X, Y)
     
- class_weights = class_weight.compute_class_weight('balanced',np.unique(W),W)
- class_weight_dict = dict(enumerate(class_weights))
+    class_weights = class_weight.compute_class_weight('balanced',np.unique(W),W)
+    class_weight_dict = dict(enumerate(class_weights))
+    
+    return X,Y,class_weight_dict
     
 ## CNN architecture
 
@@ -70,27 +78,27 @@ def getCNN():
         Conv2D(32, 3, padding='same', activation='relu', input_shape=(100,100,1)),
         BatchNormalization(),
         MaxPooling2D(),
-        Dropout(0.3),
+        Dropout(0.5),
         
         Conv2D(64, 3, padding='same', activation='relu'),
         BatchNormalization(),
         MaxPooling2D(),
-        Dropout(0.3),
+        Dropout(0.5),
         
         Conv2D(128, 3, padding='same', activation='relu'),
         BatchNormalization(),
         MaxPooling2D(),
-        Dropout(0.3),
+        Dropout(0.5),
         
         Flatten(),
         
         Dense(256, activation='relu'),
         BatchNormalization(),
-        Dropout(0.3),
+        Dropout(0.5),
         
         Dense(128, activation='relu'),
         BatchNormalization(),
-        Dropout(0.3),
+        Dropout(0.5),
         
         Dense(categories, activation='softmax')
     ])
@@ -101,8 +109,8 @@ def getCNN():
 
 ## Visualization
 
- def plot_confusion_matrix(cm, class_names):
-
+def plot_confusion_matrix(cm, class_names):
+    
     figure = plt.figure(figsize=(8, 8))
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
     plt.title("Confusion matrix")
@@ -120,67 +128,38 @@ def getCNN():
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
         color = "white" if cm[i, j] > threshold else "black"
         plt.text(j, i, cm[i, j], horizontalalignment="center", color=color)
-        
+    
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     return figure
 
 def plot_to_image(figure):
-
     buf = io.BytesIO()
-    
-    # Use plt.savefig to save the plot to a PNG in memory.
     plt.savefig(buf, format='png')
-    
-    # Closing the figure prevents it from being displayed directly inside
-    # the notebook.
     plt.close(figure)
     buf.seek(0)
-    
-    # Use tf.image.decode_png to convert the PNG buffer
-    # to a TF image. Make sure you use 4 channels.
     image = tf.image.decode_png(buf.getvalue(), channels=4)
-    
-    # Use tf.expand_dims to add the batch dimension
     image = tf.expand_dims(image, 0)
-    
     return image
 
 def log_confusion_matrix(epoch, logs):
-    
-    #computes confusion matrix each 5 epochs
-    if (epoch%5 == 0 and epoch > 0):
-        # Use the model to predict the values from the test_images.
+    if (epoch%CONFUSION_PERIOD == 0 and epoch > 0):
         test_pred_raw = model.predict(X.reshape(train_size,size,size,1))
-    
         test_pred = np.argmax(test_pred_raw, axis=1)
-    
-        # Calculate the confusion matrix using sklearn.metrics
         cm = confusion_matrix(Y, test_pred)
-    
-        figure = plot_confusion_matrix(cm, class_names=classes_list)
+        figure = plot_confusion_matrix(cm, class_names=list(range(categories)))
         cm_image = plot_to_image(figure)
-    
-        # Log the confusion matrix as an image summary.
         with file_writer_cm.as_default():
             tf.summary.image("Confusion Matrix", cm_image, step=epoch)
 
-##execute each time rm -rf ./logs/ and tensorboard --logdir logs/fit
-
-log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-
-tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
-
-file_writer_cm = tf.summary.create_file_writer(log_dir + '/cm')
-
-cm_callback = keras.callbacks.LambdaCallback(on_epoch_end=log_confusion_matrix)
+## Visualization
 
 #tensorboard --logdir logs/fit
 
 ## Training
 
-def train(model, X, Y, W):
+def train(model, X, Y, W, tensorboard_callback, cm_callback):
     print("Training model")
     history = model.fit(
         x=X.reshape(train_size,100,100,1),
@@ -202,6 +181,7 @@ def train(model, X, Y, W):
 ## Main
 
 if __name__ == "__main__":
-    tensorboard_init()
+    tensorboard_callback, cm_callback = tensorboard_init()
+    X,Y,W = getTrainingData()
     model = getCNN()
-    train(model, X, Y, W)
+    train(model, X, Y, W, tensorboard_callback, cm_callback)
