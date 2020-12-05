@@ -23,3 +23,5 @@ Scikit learning
 ### Validation with training set
 
 10% of the training set used to validate the model
+
+## Visualization
