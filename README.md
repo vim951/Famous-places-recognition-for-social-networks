@@ -14,6 +14,12 @@ This is the repository of the MALIS project of Hugo DANET, Victor MASIAK and Jul
 
 ### Architecture
 
+Conv2D, MaxPooling2D, Dropout, Flatten, Dense
+
 ### Adjust weights because of imbalanced data
 
+Scikit learning
+
 ### Validation with training set
+
+10% of the training set used to validate the model
