@@ -12,6 +12,8 @@ This is the repository of the MALIS project of Hugo DANET, Victor MASIAK and Jul
 
 ## Neural Network
 
+### Architecture
+
 ### Adjust weights because of imbalanced data
 
 ### Validation with training set
