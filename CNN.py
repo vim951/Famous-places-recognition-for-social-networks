@@ -8,6 +8,8 @@ from database import load_db_csv , id_to_np, joined_shuffle
 
 import keras
 from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Dense, Dropout, Flatten
+
 import tensorflow as tf
 
 import datetime
@@ -60,15 +62,19 @@ def getTrainingData():
 def getCNN():
     print("Generating model")
     model = Sequential([
-        keras.layers.Conv2D(16, 3, padding='same', activation='relu', input_shape=(100,100,1)),
-        keras.layers.MaxPooling2D(),
-        keras.layers.Conv2D(32, 3, padding='same', activation='relu'),
-        keras.layers.MaxPooling2D(),
-        keras.layers.Conv2D(64, 3, padding='same', activation='relu'),
-        keras.layers.MaxPooling2D(),
-        keras.layers.Flatten(),
-        keras.layers.Dense(128, activation='relu'),
-        keras.layers.Dense(categories)
+        Conv2D(16, 3, padding='same', activation='relu', input_shape=(100,100,1)),
+        MaxPooling2D(),
+        Dropout(0.2),
+        Conv2D(32, 3, padding='same', activation='relu'),
+        MaxPooling2D(),
+        Dropout(0.2),
+        Conv2D(64, 3, padding='same', activation='relu'),
+        MaxPooling2D(),
+        Dropout(0.2),
+        Flatten(),
+        Dense(128, activation='relu'),
+        Dropout(0.2),
+        Dense(categories)
     ])
     model.compile(optimizer='adam',
                 loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
