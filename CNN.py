@@ -113,7 +113,7 @@ def getCNN():
 
 def plot_confusion_matrix(cm, class_names):
     
-    figure = plt.figure(figsize=(32, 32))
+    figure = plt.figure(figsize=(64, 64))
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
     plt.title("Confusion matrix")
     plt.colorbar()
