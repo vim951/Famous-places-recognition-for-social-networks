@@ -5,6 +5,8 @@ import numpy as np
 from sklearn.utils import class_weight
 from sklearn.metrics import confusion_matrix
 
+import matplotlib.pyplot as plt
+
 from database import load_db_csv , id_to_np, joined_shuffle
 
 import keras
@@ -25,7 +27,7 @@ csv_db_path = 'train_clean.csv'
 csv_labels_path = 'train_label_to_category.csv'
 preprocessed_db_path = 'PDB'
 
-CONFUSION_PERIOD=5
+CONFUSION_PERIOD=10
 epochs=100
 train_size = 36966
 size = 100
@@ -43,7 +45,7 @@ def tensorboard_init():
     log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
     file_writer_cm = tf.summary.create_file_writer(log_dir + '/cm')
-    cm_callback = keras.callbacks.LambdaCallback(on_epoch_end=log_confusion_matrix)
+    cm_callback = tf.keras.callbacks.LambdaCallback(on_epoch_end=log_confusion_matrix)
     return tensorboard_callback, cm_callback
 
 ## Data preparation
@@ -111,7 +113,7 @@ def getCNN():
 
 def plot_confusion_matrix(cm, class_names):
     
-    figure = plt.figure(figsize=(8, 8))
+    figure = plt.figure(figsize=(32, 32))
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
     plt.title("Confusion matrix")
     plt.colorbar()
@@ -144,11 +146,11 @@ def plot_to_image(figure):
     return image
 
 def log_confusion_matrix(epoch, logs):
-    if (epoch%CONFUSION_PERIOD == 0 and epoch > 0):
+    if (epoch%CONFUSION_PERIOD == 0):
         test_pred_raw = model.predict(X.reshape(train_size,size,size,1))
         test_pred = np.argmax(test_pred_raw, axis=1)
         cm = confusion_matrix(Y, test_pred)
-        figure = plot_confusion_matrix(cm, class_names=list(range(categories)))
+        figure = plot_confusion_matrix(cm, class_names=L)
         cm_image = plot_to_image(figure)
         with file_writer_cm.as_default():
             tf.summary.image("Confusion Matrix", cm_image, step=epoch)
