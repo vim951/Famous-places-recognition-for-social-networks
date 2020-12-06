@@ -8,6 +8,8 @@ This is the repository of the MALIS project of Hugo DANET, Victor MASIAK and Jul
 * Navigate to the repository folder: `cd MALIS-project`
 * Download required files: `python3 init_directory.py csv pdb`
 
+## Database
+
 ## Preprocessing
 
 ## Neural Network
