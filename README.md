@@ -1,4 +1,4 @@
-# MALIS project: Monument classification
+# MALIS project : Famous places recognition for social networks
 
 This is the repository of the MALIS project of Hugo DANET, Victor MASIAK and Julien THOMAS (EURECOM, 2020).
 
