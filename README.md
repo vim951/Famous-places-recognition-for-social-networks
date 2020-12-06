@@ -30,3 +30,4 @@ Scikit learning
 
 * https://towardsdatascience.com/the-4-convolutional-neural-network-models-that-can-classify-your-fashion-images-9fe7f3e5399d
 * https://towardsdatascience.com/simplified-math-behind-dropout-in-deep-learning-6d50f3f47275
+* https://towardsdatascience.com/exploring-confusion-matrix-evolution-on-tensorboard-e66b39f4ac12
