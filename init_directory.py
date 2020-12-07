@@ -1,4 +1,5 @@
 import wget
+import zipfile
 import sys
 
 def download_csv():
@@ -15,7 +16,16 @@ def download_csv():
     print("Done downloading")
 
 def download_pdb():
-    pass
+    try:
+        print("Downloading PDB.zip")
+        wget.download('https://cassettefbisurveillancevan.s3.eu-west-3.amazonaws.com/PDB.zip', 'PDB.zip')
+    except:
+        print("PDB.zip download failed")
+    try:
+        with zipfile.ZipFile('PDB.zip', 'r') as zip_ref:
+            zip_ref.extractall()
+    except:
+        print("PDB.zip unzip failed")
 
 if __name__ == "__main__":
     for i in range(1,len(sys.argv)):
