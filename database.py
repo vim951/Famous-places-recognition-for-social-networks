@@ -20,13 +20,13 @@ csv_labels_path = 'train_label_to_category.csv'
 db_path = '/media/victor/Seagate Wireless/Datasets/MALIS-DB/JPG files'
 preprocessed_db_path = '/media/victor/Seagate Wireless/Datasets/MALIS-DB/NPY files'
 
-size=100
+size=256
 
 ## DB reading
 
 def id_to_np(i):
     try:
-        return np.load(join(preprocessed_db_path, i+'.npy')).reshape(1,100,100,1)
+        return np.load(join(preprocessed_db_path, i+'.npy')).reshape(1,size,size,4)
     except:
         pass
 

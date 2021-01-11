@@ -30,7 +30,7 @@ preprocessed_db_path = 'PDB'
 CONFUSION_PERIOD=10
 epochs=100
 train_size = 36966
-size = 100
+size = 256
 categories=50
 
 ## Init
@@ -77,17 +77,17 @@ def getCNN():
     print("Generating model")
     model = Sequential([
     
-        Conv2D(32, 3, padding='same', activation='relu', input_shape=(100,100,1)),
+        Conv2D(32, 4, padding='same', activation='relu', input_shape=(size,size,4)),
         BatchNormalization(),
         MaxPooling2D(),
         Dropout(0.5),
         
-        Conv2D(64, 3, padding='same', activation='relu'),
+        Conv2D(64, 4, padding='same', activation='relu'),
         BatchNormalization(),
         MaxPooling2D(),
         Dropout(0.5),
         
-        Conv2D(128, 3, padding='same', activation='relu'),
+        Conv2D(128, 4, padding='same', activation='relu'),
         BatchNormalization(),
         MaxPooling2D(),
         Dropout(0.5),
@@ -147,7 +147,7 @@ def plot_to_image(figure):
 
 def log_confusion_matrix(epoch, logs):
     if (epoch%CONFUSION_PERIOD == 0):
-        test_pred_raw = model.predict(X.reshape(train_size,size,size,1))
+        test_pred_raw = model.predict(X.reshape(train_size,size,size,4))
         test_pred = np.argmax(test_pred_raw, axis=1)
         cm = confusion_matrix(Y, test_pred)
         figure = plot_confusion_matrix(cm, class_names=L)
@@ -164,7 +164,7 @@ def log_confusion_matrix(epoch, logs):
 def train(model, X, Y, W, tensorboard_callback, cm_callback):
     print("Training model")
     history = model.fit(
-        x=X.reshape(train_size,100,100,1),
+        x=X.reshape(train_size,size,size,4),
         y=Y,
         batch_size=128,
         epochs=epochs,
