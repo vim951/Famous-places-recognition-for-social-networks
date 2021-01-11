@@ -14,10 +14,11 @@ import random
 
 ## Constants
 
+PREPROCESS_MODE = "png"
 csv_db_path = 'train_clean.csv'
 csv_labels_path = 'train_label_to_category.csv'
-db_path = 'data'
-preprocessed_db_path = 'PDB'
+db_path = '/media/victor/Seagate Wireless/Datasets/MALIS-DB/JPG files'
+preprocessed_db_path = '/media/victor/Seagate Wireless/Datasets/MALIS-DB/NPY files'
 
 size=100
 
@@ -49,6 +50,12 @@ def load_db(n):
 ## Preprocessing
 
 def preprocess_image(image_path, size, bin_path):
+    if PREPROCESS_MODE == "bw":
+        return preprocess_image_bw(image_path, size, bin_path)
+    elif PREPROCESS_MODE == "png":
+        return preprocess_image_png(image_path, size, bin_path)
+
+def preprocess_image_bw(image_path, size, bin_path):
     img = Image.open(image_path)
     l,h = img.size
     c = min(l,h)
@@ -58,6 +65,20 @@ def preprocess_image(image_path, size, bin_path):
     np_img = np.array(img_resized)
     np_img_bw = np.mean(np_img, axis=2)
     np_img_normal = np.float16(np_img_bw/255)
+    with open(bin_path, 'wb') as f:
+        np.save(f, np_img_normal)
+    return np_img_normal
+
+def preprocess_image_png(image_path, size, bin_path):
+    old_im = Image.open(image_path)
+    (l,h) = old_im.size
+    c = max(l,h)
+    new_size = (c, c)
+    old_size = (l, h)
+    new_im = Image.new("RGBA", new_size)
+    new_im.paste(old_im, ((new_size[0]-old_size[0])//2, (new_size[1]-old_size[1])//2))
+    new_im_sized = new_im.resize((size,size))
+    np_img_normal = np.float16(np.array(new_im_sized)/255)
     with open(bin_path, 'wb') as f:
         np.save(f, np_img_normal)
     return np_img_normal
@@ -78,6 +99,24 @@ def preprocess_database(from_path=None, to_path=None):
     
     for d in [f for f in listdir(from_path) if not isfile(join(from_path, f))]:
         preprocess_database(join(from_path, d), join(to_path, d))
+
+def preprocess_database_partial(n=100, size=256, from_path=None, to_path=None):
+    
+    from_path = db_path if from_path==None else from_path
+    to_path = preprocessed_db_path if to_path==None else to_path
+    
+    print("Preprocessing " + from_path)
+    
+    C,L = load_db_csv(n, excluded=[])
+    
+    t=1
+    for c in C:
+        print("Preprocessing category " + str(t) + "/" + str(len(C)))
+        t+=1
+        for x in c[1].split(' '):
+            img_path = from_path + '/' + '/'.join([y for y in x[:3]]) + '/' + str(x) + '.jpg'
+            npy_path = to_path + '/' + str(x) + '.npy'
+            preprocess_image_png(img_path, size, npy_path)
 
 ## NN aux functions
 
