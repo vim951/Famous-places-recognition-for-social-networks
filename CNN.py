@@ -28,10 +28,12 @@ csv_labels_path = 'train_label_to_category.csv'
 preprocessed_db_path = 'PDB'
 
 CONFUSION_PERIOD=10
+BATCH_SIZE = 128
+
 epochs=100
 train_size = 36966
 size = 256
-categories=50
+categories=5
 
 ## Init
 
@@ -58,6 +60,7 @@ def getTrainingData():
     X,Y,W=[],[],[]
     
     for i in range(categories):
+        print(i)
         for x in C[i][1].split(' '):
             if not id_to_np(x) is None:
                 X.append(id_to_np(x))
@@ -68,6 +71,9 @@ def getTrainingData():
     
     class_weights = class_weight.compute_class_weight('balanced',np.unique(W),W)
     class_weight_dict = dict(enumerate(class_weights))
+    
+    global train_size
+    train_size = len(Y)
     
     return X,Y,class_weight_dict
     
@@ -166,7 +172,25 @@ def train(model, X, Y, W, tensorboard_callback, cm_callback):
     history = model.fit(
         x=X.reshape(train_size,size,size,4),
         y=Y,
-        batch_size=128,
+        batch_size=BATCH_SIZE,
+        epochs=epochs,
+        verbose=2,
+        callbacks=[tensorboard_callback, cm_callback],
+        shuffle=True,
+        initial_epoch=0,
+        validation_split=0.1,
+        max_queue_size=100,
+        workers=4,
+        use_multiprocessing=True,
+        class_weight=W
+    )
+    return history
+
+def train_from_disk(model, X, Y, W, tensorboard_callback, cm_callback):
+    print("Training model from disk")
+    training_batch_generator = DB_Generator(X, Y, batch_size)
+    history = model.fit(
+        generator=training_batch_generator,
         epochs=epochs,
         verbose=2,
         callbacks=[tensorboard_callback, cm_callback],
@@ -186,4 +210,4 @@ if __name__ == "__main__":
     tensorboard_callback, cm_callback = tensorboard_init()
     X,Y,W = getTrainingData()
     model = getCNN()
-    train(model, X, Y, W, tensorboard_callback, cm_callback)
+    train_from_disk(model, X, Y, W, tensorboard_callback, cm_callback)

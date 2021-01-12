@@ -4,6 +4,8 @@ from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 
+from shutil import copyfile
+
 from PIL import Image
 import numpy as np
 import pandas as pd
@@ -20,13 +22,28 @@ csv_labels_path = 'train_label_to_category.csv'
 db_path = '/media/victor/Seagate Wireless/Datasets/MALIS-DB/JPG files'
 preprocessed_db_path = '/media/victor/Seagate Wireless/Datasets/MALIS-DB/NPY files'
 
-size=256
+## Memory optim
+
+class DB_Generator(keras.utils.Sequence) :
+  
+  def __init__(self, X, Y, batch_size) :
+    self.X = X
+    self.Y = Y
+    self.batch_size = batch_size
+    
+  def __len__(self) :
+    return (np.ceil(len(self.X) / float(self.batch_size))).astype(np.int)
+  
+  def __getitem__(self, idx) :
+    batch_x = [id_to_np(i) for i in self.X[idx * self.batch_size : (idx+1) * self.batch_size]]
+    batch_y = self.Y[idx * self.batch_size : (idx+1) * self.batch_size]
+    return batch_x, batch_y
 
 ## DB reading
 
 def id_to_np(i):
     try:
-        return np.load(join(preprocessed_db_path, i+'.npy')).reshape(1,size,size,4)
+        return np.load(join(preprocessed_db_path, i+'.npy')).reshape(1,256,256,4)
     except:
         pass
 
@@ -45,6 +62,17 @@ def load_db(n):
     C,L = load_db_csv(n)
     R = [[id_to_np(i) for i in c[1].split(' ')] for c in C]
     return [[x for x in r if not x is None] for r in R], L
+
+def copy_DB(n, from_path, to_path):
+    C,L = load_db_csv(n)
+    t=1
+    for c in C:
+        print("Copying category " + str(t) + "/" + str(len(C)))
+        t+=1
+        for x in c[1].split(' '):
+            src = from_path + '/' + str(x) + '.npy'
+            dst = to_path + '/' + str(x) + '.npy'
+            copyfile(src, dst)
     
 
 ## Preprocessing
@@ -100,14 +128,32 @@ def preprocess_database(from_path=None, to_path=None):
     for d in [f for f in listdir(from_path) if not isfile(join(from_path, f))]:
         preprocess_database(join(from_path, d), join(to_path, d))
 
-def preprocess_database_partial(n=100, size=256, from_path=None, to_path=None):
+def preprocess_database_partial(C, L, n=100, size=256, from_path=None, to_path=None):
     
     from_path = db_path if from_path==None else from_path
     to_path = preprocessed_db_path if to_path==None else to_path
     
     print("Preprocessing " + from_path)
     
+    t=1
+    for c in C:
+        print("Preprocessing category " + str(t) + "/" + str(len(C)))
+        t+=1
+        for x in c[1].split(' '):
+            img_path = from_path + '/' + '/'.join([y for y in x[:3]]) + '/' + str(x) + '.jpg'
+            npy_path = to_path + '/' + str(x) + '.npy'
+            preprocess_image_png(img_path, size, npy_path)
+
+def preprocess_database_partial_aws(n=100, size=256, from_path=None, to_path=None):
+    
+    from_path = db_path if from_path==None else from_path
+    to_path = preprocessed_db_path if to_path==None else to_path
+    
     C,L = load_db_csv(n, excluded=[])
+    
+    for i in range(500):
+        download_tar(i)
+        preprocess_database_partial(C, L, n, size, from_path, to_path)
     
     t=1
     for c in C:
