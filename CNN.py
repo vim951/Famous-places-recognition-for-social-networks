@@ -24,9 +24,6 @@ import io
 
 ##
 
-csv_db_path = 'train_clean.csv'
-csv_labels_path = 'train_label_to_category.csv'
-
 CATEGORIES=50
 CONFUSION_PERIOD=10
 BATCH_SIZE = 128
