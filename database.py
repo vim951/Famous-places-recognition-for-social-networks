@@ -10,8 +10,6 @@ from PIL import Image
 import numpy as np
 import pandas as pd
 
-from multiprocessing import Process
-
 import random
 
 ## Constants
@@ -19,25 +17,8 @@ import random
 PREPROCESS_MODE = "png"
 csv_db_path = 'train_clean.csv'
 csv_labels_path = 'train_label_to_category.csv'
-db_path = '/media/victor/Seagate Wireless/Datasets/MALIS-DB/JPG files'
-preprocessed_db_path = '/media/victor/Seagate Wireless/Datasets/MALIS-DB/NPY files'
-
-## Memory optim
-
-class DB_Generator(keras.utils.Sequence) :
-  
-  def __init__(self, X, Y, batch_size) :
-    self.X = X
-    self.Y = Y
-    self.batch_size = batch_size
-    
-  def __len__(self) :
-    return (np.ceil(len(self.X) / float(self.batch_size))).astype(np.int)
-  
-  def __getitem__(self, idx) :
-    batch_x = [id_to_np(i) for i in self.X[idx * self.batch_size : (idx+1) * self.batch_size]]
-    batch_y = self.Y[idx * self.batch_size : (idx+1) * self.batch_size]
-    return batch_x, batch_y
+#db_path = '/media/victor/Seagate Wireless/Datasets/MALIS-DB/JPG files'
+preprocessed_db_path = '/media/victor/Windows/DB'
 
 ## DB reading
 
