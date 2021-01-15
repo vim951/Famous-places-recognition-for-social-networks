@@ -25,10 +25,18 @@ import io
 ##
 
 CATEGORIES=50
-CONFUSION_PERIOD=10
+IMG_SIZE = 256
+
 BATCH_SIZE = 128
 EPOCHS=100
-IMG_SIZE = 256
+
+#Used to penalize big weights.
+#1e-3 seems to be used a lot in the litterature, as a general default value.
+#However, for CNNs, a value between 5e-4 and 1e-5 is usually better. ImageNet uses 4e-5 and Xception 1e-5.
+REGULARIZATION_FACTOR_DENSE = 1e-3
+REGULARIZATION_FACTOR_CONV = 1e-4
+
+CONFUSION_PERIOD=10
 
 train_size = 0
 
@@ -119,32 +127,32 @@ def getCNN():
     print("Generating model")
     model = Sequential([
     
-        Conv2D(32, 4, padding='same', activation='relu', kernel_regularizer=regularizers.l2(1e-3), input_shape=(IMG_SIZE,IMG_SIZE,4)),
+        Conv2D(16, 4, padding='same', activation='relu', kernel_regularizer=regularizers.l2(REGULARIZATION_FACTOR_CONV), bias_regularizer=regularizers.l2(REGULARIZATION_FACTOR_CONV), input_shape=(IMG_SIZE,IMG_SIZE,4)),
         BatchNormalization(),
         MaxPooling2D(),
         Dropout(0.5),
         
-        Conv2D(64, 4, padding='same', activation='relu', kernel_regularizer=regularizers.l2(1e-3)),
+        Conv2D(32, 4, padding='same', activation='relu', kernel_regularizer=regularizers.l2(REGULARIZATION_FACTOR_CONV), bias_regularizer=regularizers.l2(REGULARIZATION_FACTOR_CONV)),
         BatchNormalization(),
         MaxPooling2D(),
         Dropout(0.5),
         
-        Conv2D(128, 4, padding='same', activation='relu', kernel_regularizer=regularizers.l2(1e-3)),
+        Conv2D(64, 4, padding='same', activation='relu', kernel_regularizer=regularizers.l2(REGULARIZATION_FACTOR_CONV), bias_regularizer=regularizers.l2(REGULARIZATION_FACTOR_CONV)),
         BatchNormalization(),
         MaxPooling2D(),
         Dropout(0.5),
         
         Flatten(),
         
-        Dense(256, activation='relu', kernel_regularizer=regularizers.l2(1e-3)),
+        Dense(128, activation='relu', kernel_regularizer=regularizers.l2(REGULARIZATION_FACTOR_DENSE), bias_regularizer=regularizers.l2(REGULARIZATION_FACTOR_DENSE)),
         BatchNormalization(),
         Dropout(0.5),
         
-        Dense(128, activation='relu', kernel_regularizer=regularizers.l2(1e-3)),
+        Dense(64, activation='relu', kernel_regularizer=regularizers.l2(REGULARIZATION_FACTOR_DENSE), bias_regularizer=regularizers.l2(REGULARIZATION_FACTOR_DENSE)),
         BatchNormalization(),
         Dropout(0.5),
         
-        Dense(CATEGORIES, activation='softmax', kernel_regularizer=regularizers.l2(1e-3))
+        Dense(CATEGORIES, activation='softmax', kernel_regularizer=regularizers.l2(REGULARIZATION_FACTOR_DENSE), bias_regularizer=regularizers.l2(REGULARIZATION_FACTOR_DENSE))
     ])
     model.compile(optimizer='adam',
                 loss=keras.losses.SparseCategoricalCrossentropy(from_logits=False),
@@ -199,9 +207,14 @@ def log_confusion_matrix(epoch, logs):
 
 def log_confusion_matrix_from_disk(epoch, logs):
     if (epoch%CONFUSION_PERIOD == 0):
-        test_pred_raw = model.predict_generator(generator=test_generator, use_multiprocessing=True)
+        x,y = np.array([]),np.array([])
+        for i in range(testing_batch_generator.__len__()):
+            bx,by = testing_batch_generator.__getitem__(i)
+            x = np.append(x,bx)
+            y = np.append(y,y)
+        test_pred_raw = model.predict(x.reshape(x.size,IMG_SIZE,IMG_SIZE,4))
         test_pred = np.argmax(test_pred_raw, axis=1)
-        cm = confusion_matrix(validation_generator.classes, y_pred)
+        cm = confusion_matrix(y, test_pred)
         figure = plot_confusion_matrix(cm, class_names=L)
         cm_image = plot_to_image(figure)
         with file_writer_cm.as_default():
@@ -220,8 +233,8 @@ def train(model, X, Y, W, tensorboard_callback, cm_callback):
         y=Y,
         batch_size=BATCH_SIZE,
         epochs=EPOCHS,
-        verbose=2,
-        callbacks=[tensorboard_callback, cm_callback],
+        #verbose=2,
+        callbacks=[tensorboard_callback],# cm_callback],
         shuffle=True,
         initial_epoch=0,
         validation_split=0.1,
@@ -249,19 +262,16 @@ class DB_Generator(keras.utils.Sequence) :
     batch_y = self.Y[idx * self.batch_size : (idx+1) * self.batch_size]
     return batch_x, batch_y
 
-def train_from_disk(model, X, Y, W, tensorboard_callback, cm_callback):
+def train_from_disk(model, W, tensorboard_callback, cm_callback):
     print("Training model from disk")
-    training_batch_generator = DB_Generator(X[:9*len(X)//10], Y[:9*len(Y)//10], BATCH_SIZE)
-    testing_batch_generator = DB_Generator(X[9*len(X)//10:], Y[9*len(Y)//10:], BATCH_SIZE)
     history = model.fit_generator(
         generator=training_batch_generator,
         epochs=EPOCHS,
         verbose=2,
-        callbacks=[tensorboard_callback, cm_callback],
+        callbacks=[tensorboard_callback],
         shuffle=True,
         validation_data = testing_batch_generator,
         workers=4,
-        use_multiprocessing=True,
         class_weight=W
     )
     return history
@@ -270,6 +280,8 @@ def train_from_disk(model, X, Y, W, tensorboard_callback, cm_callback):
 
 if __name__ == "__main__":
     tensorboard_callback, cm_callback = tensorboard_init_from_disk()
-    X,Y,W = get_training_data_from_disk()
+    X,Y,W = getTrainingData()
+    training_batch_generator = DB_Generator(X[:9*len(X)//10], Y[:9*len(Y)//10], BATCH_SIZE)
+    testing_batch_generator = DB_Generator(X[9*len(X)//10:], Y[9*len(Y)//10:], BATCH_SIZE)
     model = getCNN()
-    train_from_disk(model, X, Y, W, tensorboard_callback, cm_callback)
+    train(model, W, tensorboard_callback, cm_callback)
